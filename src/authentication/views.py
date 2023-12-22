@@ -1,19 +1,26 @@
-from django.shortcuts import render
+# Rest-Framework Import
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
-from .serializers import CreateUserSerializer, UserLoginSerializer
 from rest_framework.response import Response
 from rest_framework import status
-from common.helpers import validation_error_handler
-from authentication.models import User
-from .helpers import AuthHelper
+from rest_framework_simplejwt.views import TokenRefreshView
+
+# Django Import
+from django.shortcuts import render
 from django.conf import settings
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.hashers import check_password
+
+# Project Level Imports
+from common.helpers import validation_error_handler
+from authentication.models import User
+from .helpers import AuthHelper
 from .tokens import account_activation_token
 from common.utils import Utility
+from .serializers import CreateUserSerializer, CustomTokenRefreshSerializer, UserLoginSerializer
 import logging
-from django.contrib.auth.hashers import check_password
+
 
 logger = logging.getLogger(__file__)
 
@@ -189,3 +196,9 @@ class LoginView(GenericAPIView):
                 "message": "No user found",
                 "payload": {}
             }, status=status.HTTP_404_NOT_FOUND)
+        
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer
+
+    def post(self, request, *args, **kwargs) -> Response:
+        return super().post(request, *args, **kwargs)
