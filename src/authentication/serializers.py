@@ -31,3 +31,37 @@ class CreateUserSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
         lower_case_email = value.lower()
         return lower_case_email
+
+class UserLoginSerializer(serializers.ModelSerializer):
+    username_or_email =  serializers.CharField(
+        write_only=True
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            "username_or_email",
+            "email",
+            "password",
+            "username",
+            "first_name",
+            "last_name",
+            "date_joined",
+            "is_active",
+            "is_superuser"
+        )
+        read_only_fields = [
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "date_joined",
+            "is_active",
+            "is_superuser"
+        ]
+        extra_kwargs = {
+            "password": {"write_only": True}
+        }
+    
+    def validate_username_or_email(self, value):
+        return value.lower()
