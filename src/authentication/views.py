@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import CreateUserSerializer
+from rest_framework.generics import GenericAPIView
+from .serializers import CreateUserSerializer, UserLoginSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from common.helpers import validation_error_handler
@@ -12,6 +13,7 @@ from django.utils.encoding import force_bytes, force_str
 from .tokens import account_activation_token
 from common.utils import Utility
 import logging
+from django.contrib.auth.hashers import check_password
 
 logger = logging.getLogger(__file__)
 
@@ -129,3 +131,61 @@ class ActivateAccountView(APIView):
             "message": "Activation link is invalid",
             "payload": {}
         }, status=status.HTTP_403_FORBIDDEN)
+
+
+class LoginView(GenericAPIView):
+    serializer_class = UserLoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        request_data = request.data
+        serializer = self.serializer_class(data=request_data)
+        if serializer.is_valid() is False:
+            return Response({
+                "status": "error",
+                "message": validation_error_handler(serializer.errors),
+                "payload": {
+                    "errors": serializer.errors
+                }
+            }, status.HTTP_400_BAD_REQUEST)
+        validated_data = serializer.validated_data
+        username_or_email = validated_data["username_or_email"]
+        password = validated_data["password"]
+        user = (
+            User.objects.filter(email=username_or_email).first()
+            or
+            User.objects.filter(username=username_or_email).first()
+        )
+        if user is not None:
+            validate_password = check_password(
+                password, user.password
+            )
+            if validate_password:
+                if user.is_active is False:
+                    return Response({
+                        "status": "error",
+                        "message": "User account is not active. Please verify your email first.",
+                        "payload": {}
+                    }, status=status.HTTP_403_FORBIDDEN)
+                serializer_data = self.serializer_class(
+                    user, context={"request": request}
+                )
+                return Response({
+                    "status": "success",
+                    "message": "Login Successful",
+                    "payload": {
+                        **serializer_data.data,
+                        "token": AuthHelper.get_tokens_for_user(user)
+                    }
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    "status": "error",
+                    "message": "Invalid Credentials",
+                    "payload": {}
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({
+                "status": "error",
+                "message": "No user found",
+                "payload": {}
+            }, status=status.HTTP_404_NOT_FOUND)
