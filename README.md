@@ -2,4 +2,4 @@
 
 
 ## Database Schema
-![Database Schema](shopcartush.pdf)
+![Database Schema](images_for_readme/shopcartush.png)
