@@ -45,6 +45,8 @@ INSTALLED_APPS = [
 
     # Third Party
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
 
     # Local
     'authentication',
@@ -148,8 +150,15 @@ AUTH_USER_MODEL = "authentication.User"
 FRONTEND_HOST = config('FRONTEND_HOST')
 FRONTEND_PROTOCOL = config('FRONTENT_PROTOCOL')
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+}
+
 ACCESS_TOKEN_VALID_DURATION = int(config("ACCESS_TOKEN_VALID_DURATION"))
 REFRESH_TOKEN_VALID_DURATION = int(config("REFRESH_TOKEN_VALID_DURATION"))
+ALLOW_NEW_REFRESH_TOKENS_FOR_UNVERIFIED_USERS = bool(config('ALLOW_NEW_REFRESH_TOKENS_FOR_UNVERIFIED_USERS'))
 
 import os
 
@@ -203,11 +212,4 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
     "AUTH_HEADER_TYPES": ("Bearer",),
-}
-
-
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ],
 }
