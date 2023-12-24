@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.utils import datetime_from_epoch
 
 from authentication.models import User
@@ -115,3 +115,20 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
 
         except Exception:
             raise
+
+
+class LogoutRequestSerializer(serializers.Serializer):
+    all = serializers.BooleanField(required=False)
+    refresh = serializers.CharField(required=False)
+
+    def validate(self, attrs):
+        all = attrs.get("all")
+        refresh = attrs.get("refresh")
+        if not all:
+            if not refresh:
+                raise serializers.ValidationError(
+                    {
+                        "refresh": "If user wants to logout from all devices then all parameter should be passed with true else refresh is a required parameter to logout from the current device."
+                    }
+                )
+        return super().validate(attrs)
