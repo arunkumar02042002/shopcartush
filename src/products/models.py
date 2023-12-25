@@ -28,6 +28,9 @@ class Product(TimeStampedModel):
     image = models.ImageField(upload_to='products/product_images', null=True, blank=True)
     tags = models.ManyToManyField(Tag, through="ProductTag", related_name="products")
 
+    def __str__(self) -> str:
+        return str(self.admin_user_id)+'-'+self.name
+
 
 class ProductTag(TimeStampedModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -39,3 +42,6 @@ class ProductTag(TimeStampedModel):
                 fields=['product_id', 'tag_id'], name='unique_product_tag'
             )
         ]
+
+    def __str__(self) -> str:
+        return 'Tag-' + str(self.tag_id) + '-product-' + str(self.product_id)
