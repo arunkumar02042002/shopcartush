@@ -14,6 +14,7 @@ from pathlib import Path
 from decouple import config
 from decouple import config
 from datetime import timedelta
+import os
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -55,7 +56,8 @@ INSTALLED_APPS = [
     'orders',
     'products',
     'users',
-    'config'
+    'config',
+    'admin_dashboard',
 ]
 
 MIDDLEWARE = [
