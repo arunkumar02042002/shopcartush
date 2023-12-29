@@ -5,10 +5,9 @@ from django.db import transaction
 from django.conf import settings
 
 # Rest Framework Imports
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import RetrieveAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 
 # Project level import
@@ -21,12 +20,12 @@ from .models import Cart, CartItem
 from orders.models import Order, OrderItem
 
 # Create your views here.
-class AddToCartView(APIView):
+class AddtoCartView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = AddToCartRequestSerializer
-
+    
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
-
         if serializer.is_valid() is False:
             return Response({
                 "status": "error",
@@ -37,7 +36,6 @@ class AddToCartView(APIView):
         validated_data = serializer.validated_data
         product_uuid = validated_data["product_uuid"]
         product = Product.objects.filter(uuid=product_uuid).first()
-
         if product is None:
             return Response({
                 "status": "error",
@@ -48,7 +46,6 @@ class AddToCartView(APIView):
         with transaction.atomic():
             # nowait=True - directly gives the error if the object is locked
             cart = Cart.objects.filter(user=request.user).select_for_update(nowait=True).first()
-
             if cart is None:
                 cart = Cart.objects.create(
                     user=request.user
@@ -58,7 +55,7 @@ class AddToCartView(APIView):
                 cart=cart,
                 product=product
             ).first()
-
+            
             if existing_cart_item is not None:
                 existing_cart_item.quantity += 1
                 existing_cart_item.save()
@@ -68,7 +65,6 @@ class AddToCartView(APIView):
                     product=product,
                     quantity=1
                 )
-
             return Response({
                 "status": "success",
                 "message": "Successfully added the product to the cart",
