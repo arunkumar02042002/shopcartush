@@ -7,6 +7,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from drf_yasg.utils import swagger_auto_schema
 
 # Django Import
 from django.shortcuts import render
@@ -20,20 +21,19 @@ from common.helpers import validation_error_handler
 from authentication.models import User
 from .helpers import AuthHelper
 from .tokens import account_activation_token
-from common.utils import Utility
+# from common.utils import Utility
 from .serializers import CreateUserSerializer, CustomTokenRefreshSerializer, UserLoginSerializer, LogoutRequestSerializer
 import logging
-
 
 logger = logging.getLogger(__file__)
 
 # Create your views here.
-class SignUpView(APIView):
+class SignUpView(GenericAPIView):
 
     # DRF uses this variable to display the deafult html template
     serializer_class = CreateUserSerializer
 
-    # Post request handler
+    @swagger_auto_schema(responses={status.HTTP_200_OK: CreateUserSerializer})
     def post(self, request, *args, **kwargs):
         request_data = request.data
         # data is required - otherwise it will not perform validations
@@ -120,7 +120,7 @@ class SignUpView(APIView):
         #     }
         # })
 
-class ActivateAccountView(APIView):
+class ActivateAccountView(GenericAPIView):
     def get(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
@@ -206,7 +206,7 @@ class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs) -> Response:
         return super().post(request, *args, **kwargs)
 
-class UserLogoutView(APIView):
+class UserLogoutView(GenericAPIView):
     serializer_class = LogoutRequestSerializer
     permission_classes = [IsAuthenticated]
 
