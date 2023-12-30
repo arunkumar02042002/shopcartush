@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_yasg',
 
     # Local
     'authentication',
@@ -218,4 +219,20 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
     "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+RAZORPAY_MERCHANT_ID = config("RAZORPAY_MERCHANT_ID")
+
+REST_FRAMEWORK["DEFAULT_SCHEMA_CLASS"] = "rest_framework.schemas.coreapi.AutoSchema"
+
+SWAGGER_SETTINGS = {
+    "USE_SESSION_AUTH": True,
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
+    },
+    "JSON_EDITOR": True
+}
+
+REDOC_SETTINGS = {
+    "LAZY_RENDERING": False
 }
