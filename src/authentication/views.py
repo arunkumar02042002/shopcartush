@@ -24,6 +24,7 @@ from .tokens import account_activation_token
 # from common.utils import Utility
 from .serializers import CreateUserSerializer, CustomTokenRefreshSerializer, UserLoginSerializer, LogoutRequestSerializer
 import logging
+from .tasks import send_verify_email_link
 
 logger = logging.getLogger(__file__)
 
@@ -76,49 +77,53 @@ class SignUpView(GenericAPIView):
         
         serializer_data = self.serializer_class(user).data
 
-        # send email
-        subject = "Verify Email for your Account Verification on WonderShop"
-        template = "auth/email/verify_email.html"
-        context_data = {
-            "host": settings.FRONTEND_HOST,
-            "uid": urlsafe_base64_encode(force_bytes(user.id)),
-            "token": account_activation_token.make_token(user=user),
-            "protocol": settings.FRONTEND_PROTOCOL
-        }
+        """
+        We are sending emails via Celery in background.
+        """
 
-        print(context_data)
-        try:
-            # Utility.send_mail_via_sendgrid(
-            #     user.email,
-            #     subject,
-            #     template,
-            #     context_data
-            # )
-            return Response({
-                "status": "success",
-                "message": "Sent the account verification link to your email address",
-                "payload": {
-                    **serializer_data,
-                    "tokens": AuthHelper.get_tokens_for_user(user) # For log in purpose, If the email is the verified this token will not work.
-                }
-            })
-        except Exception:
-            logger.error("Some error occurred in signup endpoint", exc_info=True)
-            return Response({
-                "status": "error",
-                "message": "Some error occurred",
-                "payload": {}
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # send email
+        # subject = "Verify Email for your Account Verification on WonderShop"
+        # template = "auth/email/verify_email.html"
+        # context_data = {
+        #     "host": settings.FRONTEND_HOST,
+        #     "uid": urlsafe_base64_encode(force_bytes(user.id)),
+        #     "token": account_activation_token.make_token(user=user),
+        #     "protocol": settings.FRONTEND_PROTOCOL
+        # }
+
+        # print(context_data)
+        # try:
+        #     # Utility.send_mail_via_sendgrid(
+        #     #     user.email,
+        #     #     subject,
+        #     #     template,
+        #     #     context_data
+        #     # )
+        #     return Response({
+        #         "status": "success",
+        #         "message": "Sent the account verification link to your email address",
+        #         "payload": {
+        #             **serializer_data,
+        #             "tokens": AuthHelper.get_tokens_for_user(user) # For log in purpose, If the email is the verified this token will not work.
+        #         }
+        #     })
+        # except Exception:
+        #     logger.error("Some error occurred in signup endpoint", exc_info=True)
+        #     return Response({
+        #         "status": "error",
+        #         "message": "Some error occurred",
+        #         "payload": {}
+        #     }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        # send_verify_email_link.delay()
-        # return Response({
-        #     "status": "success",
-        #     "message": "Sent the account verification link to your email address",
-        #     "payload": {
-        #         **serializer_data,
-        #         "tokens": AuthHelper.get_tokens_for_user(user)
-        #     }
-        # })
+        send_verify_email_link.delay(user)
+        return Response({
+            "status": "success",
+            "message": "Sent the account verification link to your email address",
+            "payload": {
+                **serializer_data,
+                "tokens": AuthHelper.get_tokens_for_user(user)
+            }
+        })
 
 class ActivateAccountView(GenericAPIView):
     def get(self, request, uidb64, token):
