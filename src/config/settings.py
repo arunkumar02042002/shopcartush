@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
-
+    'django_celery_beat',
+    
     # Local
     'authentication',
     'main',
@@ -59,6 +60,7 @@ INSTALLED_APPS = [
     'users',
     'config',
     'admin_dashboard',
+    'notifications'
 ]
 
 MIDDLEWARE = [
@@ -241,3 +243,5 @@ CELERY_BROKER_URL = "amqp://guest:guest@127.0.0.1:5672/"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
